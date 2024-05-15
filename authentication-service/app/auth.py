@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 from .database import get_db
 from .crud import get_user, create_user
-from .schemas import UserCreate, Token
+from .schemas import UserCreate, Token, UserResponse
 from .utils import verify_password, get_password_hash  # Import from utils
 
 router = APIRouter()
@@ -47,12 +47,13 @@ async def login_for_access_token(db: Session = Depends(get_db), form_data: OAuth
     access_token = create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
 
-@router.post("/users/", response_model=UserCreate)
+@router.post("/users/", response_model=UserResponse)
 def create_new_user(user: UserCreate, db: Session = Depends(get_db)):
     db_user = get_user(db, user.username)
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
-    return create_user(db=db, user=user)
+    new_user = create_user(db=db, user=user)
+    return new_user
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
