@@ -3,18 +3,29 @@ name: video-scanner
 services:
   mysql:
     image: mysql:latest
-    container_name: mysql
+    container_name: $MYSQL_HOST
     restart: always
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_DATABASE=${MYSQL_DB}
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT}:3306"
     volumes:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
       - mysql_data:/var/lib/mysql
+    networks:
+      - application
+
+  fastapi-auth:
+    build: ./authentication-service
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql
+    env_file:
+      - .env
     networks:
       - application
 
