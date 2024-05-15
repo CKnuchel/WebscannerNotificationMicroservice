@@ -18,17 +18,18 @@ Dieses Projekt umfasst mehrere Microservices, die in Docker-Containern ausgefüh
 - [x] Sicherstellen, dass die Datenbank korrekt läuft und zugänglich ist
 
 
-### 2. Authentication Service (Spring Boot)
-- [ ] Spring Boot Projekt einrichten
-- [ ] Verbindung zur MySQL-Datenbank herstellen
-- [ ] Dockerfile erstellen
-- [ ] Endpunkte für Benutzerregistrierung und -anmeldung erstellen
-- [ ] Hashen der Passwörter (z.B. mit BCrypt)
-- [ ] Unit-Tests für die Endpunkte schreiben
-- [ ] JWT-Authentifizierung einrichten
-- [ ] Endpunkte sichern
-- [ ] Spring Boot Anwendung containerisieren
-- [ ] Service in `docker-compose.yml` hinzufügen
+### 2. Authentication Service (Fast API)
+- [x] Projekt einrichten
+- [x] Verbindung zur MySQL-Datenbank herstellen
+- [x] Dockerfile erstellen
+- [x] Endpunkte für Benutzerregistrierung und -anmeldung erstellen
+- [x] Hashen der Passwörter (z.B. mit BCrypt)
+- [x] JWT-Authentifizierung einrichten
+- [x] Endpunkte sichern (Login/Register)
+- [x] Service in `docker-compose.yml` hinzufügen
+
+#### Erweiterungen
+- [ ] Rollen integrieren
 
 ### 3. Message Queue (RabbitMQ)
 - [ ] RabbitMQ im Docker Compose definieren und starten
