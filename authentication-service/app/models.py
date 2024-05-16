@@ -6,3 +6,4 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(50), unique=True, index=True)
     hashed_password = Column(String(100))
+    role = Column(String(50), default="user")

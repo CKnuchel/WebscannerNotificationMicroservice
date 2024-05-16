@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from .database import get_db
 from .crud import get_user, create_user
 from .schemas import UserCreate, Token, UserResponse
-from .utils import verify_password, get_password_hash  # Import from utils
+from .utils import verify_password
 
 router = APIRouter()
 
@@ -44,7 +44,7 @@ async def login_for_access_token(db: Session = Depends(get_db), form_data: OAuth
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
+    access_token = create_access_token(data={"sub": user.username, "role": user.role}, expires_delta=access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/users/", response_model=UserResponse)
@@ -54,21 +54,3 @@ def create_new_user(user: UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Username already registered")
     new_user = create_user(db=db, user=user)
     return new_user
-
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    credentials_exception = HTTPException(
-        status_code=401,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-    user = get_user(db, username=username)
-    if user is None:
-        raise credentials_exception
-    return user
