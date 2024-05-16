@@ -21,8 +21,8 @@
 - [x] Service in `docker-compose.yml` hinzufügen
 
 ### 3. Message Queue (RabbitMQ)
-- [ ] RabbitMQ im Docker Compose definieren und starten
-- [ ] Sicherstellen, dass RabbitMQ läuft und zugänglich ist
+- [x] RabbitMQ im Docker Compose definieren und starten
+- [x] Sicherstellen, dass RabbitMQ läuft und zugänglich ist
 
 ### 4. Scraping Services (Python (BS4))
 - [ ] Python Projekt für Scraper einrichten
@@ -56,7 +56,7 @@
 - [ ] Service in `docker-compose.yml` hinzufügen
 
 ## Weiterentwicklung
-- [ ] FastAPI (Auth) Konfiguration in .env
+- [x] FastAPI (Auth) Konfiguration in .env
 - [ ] MySQL Port nicht gegen aussen Exposen
 
 ## Projektstruktur
