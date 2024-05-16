@@ -55,7 +55,7 @@ services:
 
   # Message Broker - RabbitMQ
   rabbitmq:
-    image: rabbitmq:3-management
+    build: ./message-queue
     container_name: rabbitmq
     restart: always
 
