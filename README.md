@@ -1,1 +1,1 @@
-# VideoScannerMicroservice
+# WebScannerNotificationMicroservice
