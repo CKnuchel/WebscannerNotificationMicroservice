@@ -3,14 +3,6 @@
 
 ## Übersicht
 
-Dieses Projekt umfasst mehrere Microservices, die in Docker-Containern ausgeführt werden. Die Hauptkomponenten sind:
-1. MySQL Datenbank
-2. Authentication Service (Spring Boot)
-3. Scraping Services (Python)
-4. API Gateway (Python oder Java)
-5. Notification Service (Python, mit Firebase)
-6. Message Queue (RabbitMQ)
-
 ## Reihenfolge der Implementierung
 
 ### 1. MySQL Datenbank
@@ -27,9 +19,6 @@ Dieses Projekt umfasst mehrere Microservices, die in Docker-Containern ausgefüh
 - [x] JWT-Authentifizierung einrichten
 - [x] Endpunkte sichern (Login/Register)
 - [x] Service in `docker-compose.yml` hinzufügen
-
-#### Erweiterungen
-- [ ] Rollen integrieren
 
 ### 3. Message Queue (RabbitMQ)
 - [ ] RabbitMQ im Docker Compose definieren und starten
@@ -67,7 +56,8 @@ Dieses Projekt umfasst mehrere Microservices, die in Docker-Containern ausgefüh
 - [ ] Service in `docker-compose.yml` hinzufügen
 
 ## Weiterentwicklung
-- [ ] CI/CD: Implementiere eine CI/CD-Pipeline für automatisiertes Bauen, Testen und Deployment
+- [ ] FastAPI (Auth) Konfiguration in .env
+- [ ] MySQL Port nicht gegen aussen Exposen
 
 ## Projektstruktur
 
