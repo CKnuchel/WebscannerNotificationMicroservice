@@ -1,25 +1,25 @@
-name: video-scanner
+name: webscanner
 
 services:
 
   # MySQL Database
-  mysql:
+  mysql-auth:
     image: mysql:latest
-    container_name: ${MYSQL_SERVICE_NAME}
+    container_name: ${MYSQL_AUTH_SERVICE_NAME}
     restart: always
 
     environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} # Root password
-      - MYSQL_USER=${MYSQL_USER} # User
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD} # User password
+      - MYSQL_ROOT_PASSWORD=${MYSQL_AUTH_ROOT_PASSWORD} # Root password, Default User: root
+      - MYSQL_USER=${MYSQL_AUTH_USER} # Application user
+      - MYSQL_PASSWORD=${MYSQL_AUTH_PASSWORD} # Application password
+      - MYSQL_DATABASE=${MYSQL_AUTH_DATABASE} # Application database
 
     ports:
-      - "${MYSQL_PORT}:3306" # MySQL port
+      - "${MYSQL_AUTH_PORT}:3306" # MySQL port
 
     volumes:
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql # Initialize database
-      - .database/my.cnf:/etc/mysql/my.cnf # MySQL configuration
-      - mysql_data:/var/lib/mysql # Persist MySQL data
+      - ./database/auth/init.sql:/docker-entrypoint-initdb.d/init.sql # Initialize MySQL with schema
+      - mysql_auth_data:/var/lib/mysql # Persist MySQL data
 
     networks:
       - application
@@ -42,7 +42,7 @@ services:
 
     depends_on:
 
-      mysql:
+      mysql-auth:
         condition: service_healthy # Wait for MySQL to be healthy
 
       rabbitmq:
@@ -53,6 +53,13 @@ services:
 
     networks:
       - application
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"] # Check if FastAPI is up
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # Message Broker - RabbitMQ
   rabbitmq:
@@ -83,7 +90,7 @@ services:
       start_period: 30s
 
 volumes:
-  mysql_data: # MySQL data volume
+  mysql_auth_data: # MySQL data volume for authentication service
   rabbitmq_data: # RabbitMQ data volume
   rabbitmq_config: # RabbitMQ configuration volume
 

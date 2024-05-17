@@ -68,3 +68,8 @@ async def validate_token(token: str = Depends(oauth2_scheme)):
         return {"valid": True, "username": payload.get("sub"), "role": payload.get("role")}
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+    
+# Endpoint for testing
+@router.get("/health")
+async def health():
+    return {"status": "ok"}
