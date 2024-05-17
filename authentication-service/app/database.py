@@ -12,8 +12,8 @@ MYSQL_DB = os.getenv("MYSQL_AUTH_DB")
 SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine) # This creates a Session to interact with the database
+Base = declarative_base() # This is the base class for all the models in the application
 
 def get_db():
     db = SessionLocal()
