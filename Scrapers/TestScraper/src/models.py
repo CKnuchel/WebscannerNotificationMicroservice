@@ -24,7 +24,6 @@ class Product(Base):
     name = Column(String, nullable=False)
     category_id = Column(Integer, ForeignKey('categories.id'), nullable=False) # Foreign key to categories table
     url = Column(String, nullable=False)
-    price = Column(Float, nullable=False)
 
     # Relationships
     category = relationship('Category', back_populates='products') # Many to one relationship with Category. Many products can belong to one category
