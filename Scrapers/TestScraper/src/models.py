@@ -1,4 +1,4 @@
-from sqlalchemy import Column, UUID, Integer, String, ForeignKey, Text, Float
+from sqlalchemy import Column, Integer, String, ForeignKey, Text, Float
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -8,7 +8,7 @@ class Category(Base):
     __tablename__ = 'categories'
 
     # Columns
-    id = Column(UUID, primary_key=True) # Primary key
+    id = Column(Integer, primary_key=True) # Primary key
     name = Column(String, nullable=False)
     url = Column(String, nullable=False)
 
@@ -20,9 +20,9 @@ class Product(Base):
     __tablename__ = 'products'
 
     # Columns
-    id = Column(UUID, primary_key=True) # Primary key
+    id = Column(Integer, primary_key=True) # Primary key
     name = Column(String, nullable=False)
-    category_id = Column(UUID, ForeignKey('categories.id'), nullable=False) # Foreign key to categories table
+    category_id = Column(Integer, ForeignKey('categories.id'), nullable=False) # Foreign key to categories table
     url = Column(String, nullable=False)
     price = Column(Float, nullable=False)
 
@@ -35,8 +35,8 @@ class ProductDetail(Base):
     __tablename__ = 'product_details'
     
     # Columns
-    id = Column(UUID, primary_key=True) # Primary key
-    product_id = Column(UUID, ForeignKey('products.id'), nullable=False) # Foreign key to products table
+    id = Column(Integer, primary_key=True) # Primary key
+    product_id = Column(Integer, ForeignKey('products.id'), nullable=False) # Foreign key to products table
     description = Column(Text, nullable=False)
     image_url = Column(String, nullable=False)
     price = Column(Float, nullable=False)
