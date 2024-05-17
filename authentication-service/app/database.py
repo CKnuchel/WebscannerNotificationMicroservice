@@ -5,7 +5,7 @@ import os
 
 MYSQL_USER = os.getenv("AUTH_USER")
 MYSQL_PASSWORD = os.getenv("AUTH_PASSWORD")
-MYSQL_HOST = os.getenv("MYSQL_HOST")
+MYSQL_HOST = os.getenv("MYSQL_SERVICE_NAME")
 MYSQL_PORT = os.getenv("MYSQL_PORT")
 MYSQL_DB = os.getenv("MYSQL_AUTH_DB")
 
