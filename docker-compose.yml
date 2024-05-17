@@ -22,7 +22,7 @@ services:
       - mysql_auth_data:/var/lib/mysql # Persist MySQL data
 
     networks:
-      - application
+      - mysql-auth
 
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"] # Check if MySQL is up
@@ -52,6 +52,7 @@ services:
       - .env  # Load environment variables from .env file
 
     networks:
+      - mysql-auth
       - application
     
     healthcheck:
@@ -98,3 +99,5 @@ volumes:
 networks:
   application:
     driver: bridge
+  mysql-auth:
+    internal: true
