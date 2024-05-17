@@ -90,14 +90,53 @@ services:
       retries: 5
       start_period: 30s
 
+#------------------------------------------------------------------------------------------------------------------
+# Scraping services
+#------------------------------------------------------------------------------------------------------------------
+
+  # Scraping DB's 
+  mysql-test-scraper:
+    image: mysql:latest
+    container_name: ${MYSQL_TEST_SCRAPER_SERVICE_NAME}
+    restart: always
+
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_TEST_SCRAPER_ROOT_PASSWORD} # Root password, Default User: root
+      - MYSQL_USER=${MYSQL_TEST_SCRAPER_USER} 
+      - MYSQL_PASSWORD=${MYSQL_TEST_SCRAPER_PASSWORD} 
+      - MYSQL_DATABASE=${MYSQL_TEST_SCRAPER_DATABASE} 
+
+    ports:
+      - "${MYSQL_TEST_SCRAPER_PORT}:3306"
+
+    volumes:
+      - ./database/Scrapers/TestScraper/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql_test_scraper_data:/var/lib/mysql
+
+    networks:
+      - mysql-scraping
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
 volumes:
+  # Basic volumes
   mysql_auth_data: # MySQL data volume for authentication service
   rabbitmq_data: # RabbitMQ data volume
   rabbitmq_config: # RabbitMQ configuration volume
+
+  # Custom volumes for scraping service
+  mysql_test_scraper_data: # MySQL data volume for scraping service
 
 
 networks:
   application:
     driver: bridge
   mysql-auth:
+    internal: true
+  mysql-scraping:
     internal: true
