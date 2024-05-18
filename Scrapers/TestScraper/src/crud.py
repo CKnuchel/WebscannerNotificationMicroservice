@@ -13,7 +13,7 @@ def create_category(db: Session, category: CategoryCreate):
     - Returns:
         - The newly created category
     """
-    db_category = Category(name=category.name, url=category.url)
+    db_category = Category(name=category.name, url=category.url, level=category.level)
     db.add(db_category)
     db.commit()
     db.refresh(db_category)
@@ -29,6 +29,17 @@ def get_category_by_category_id(db: Session, category_id: int):
         - The category with the specified unique identifier
     """
     return db.query(Category).filter(Category.id == category_id).first()
+
+def get_category_by_name(db: Session, name: str):
+    """
+    This function is used to retrieve a category from the database.
+    - Parameters:
+        - db: The database session
+        - name: The name of the category
+    - Returns:
+        - The category with the specified name
+    """
+    return db.query(Category).filter(Category.name == name).first()
 
 def get_categories(db: Session, skip: int = 0, limit: int = 100):
     """

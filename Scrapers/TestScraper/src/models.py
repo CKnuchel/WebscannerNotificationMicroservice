@@ -11,6 +11,7 @@ class Category(Base):
     id = Column(Integer, primary_key=True) # Primary key
     name = Column(String, nullable=False)
     url = Column(String, nullable=False)
+    level = Column(String, nullable=False)
 
     # Relationships
     products = relationship('Product', back_populates='category') # One to many relationship with Product. One category can have many products

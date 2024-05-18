@@ -10,9 +10,10 @@ class CategoryBase(BaseModel):
     """
     name : str
     url : str
+    level : str
 
 
-class CategoryCreate(CategorBasey):
+class CategoryCreate(CategoryBase):
     """
     This Class is used to define the structure of the data that will be used to create a new category in the database.
     - Fields:
