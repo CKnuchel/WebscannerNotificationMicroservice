@@ -81,6 +81,17 @@ def get_product_by_product_id(db: Session, product_id: int):
     """
     return db.query(Product).filter(Product.id == product_id).first()
 
+def get_product_by_name(db: Session, name: str):
+    """
+    This function is used to retrieve a product from the database.
+    - Parameters:
+        - db: The database session
+        - name: The name of the product
+    - Returns:
+        - The product with the specified name
+    """
+    return db.query(Product).filter(Product.name == name).first()
+
 def get_products(db: Session, skip: int = 0, limit: int = 100):
     """
     This function is used to retrieve a list of products from the database.
@@ -127,3 +138,14 @@ def get_product_detail_by_product_id(db: Session, product_id: int):
         - The product detail with the specified unique identifier
     """
     return db.query(ProductDetail).filter(ProductDetail.product_id == product_id).first()
+
+def get_product_detail_by_name(db: Session, name: str):
+    """
+    This function is used to retrieve a product detail from the database.
+    - Parameters:
+        - db: The database session
+        - name: The name of the product
+    - Returns:
+        - The product detail with the specified name
+    """
+    return db.query(ProductDetail).filter(ProductDetail.name == name).first()

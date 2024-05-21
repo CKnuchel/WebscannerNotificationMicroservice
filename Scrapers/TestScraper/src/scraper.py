@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from sqlalchemy.orm import Session
-from crud import create_category, get_category_by_name, create_product, create_product_detail
+from crud import create_category, get_category_by_name, create_product, create_product_detail, get_product_by_name, get_product_detail_by_name
 from schemas import CategoryCreate, ProductCreate, ProductDetailCreate
 from models import Category, Product
 
@@ -101,10 +101,12 @@ def scrape_product_details(db: Session):
         product_reviews = card.find("p", class_="review-count").text.split(' ')[0]
 
         # Create the product detail in the database, if it does not exist
-        create_product_detail(db, ProductDetailCreate(
-            product_id=product.id, 
-            thumbnail=product_thumbnail, 
-            description=product_description, 
-            price=product_price, 
-            options=product_options, 
-            reviews_count=product_reviews))
+        if not get_product_detail_by_name(db, product.name):
+
+            create_product_detail(db, ProductDetailCreate(
+                product_id=product.id, 
+                thumbnail=product_thumbnail, 
+                description=product_description, 
+                price=product_price, 
+                options=product_options, 
+                reviews_count=product_reviews))
