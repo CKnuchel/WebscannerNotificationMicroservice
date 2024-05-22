@@ -10,7 +10,7 @@ from .rabbitmq import send_message
 
 router = APIRouter()
 
-BASE_URL = "https://webscraper.io/"
+BASE_URL = "https://webscraper.io"
 TEST_SITE_URL = "/test-sites/e-commerce/static"
 
 def fetch_html(url: str):
