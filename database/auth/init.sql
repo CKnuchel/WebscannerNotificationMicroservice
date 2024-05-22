@@ -1,5 +1,7 @@
 CREATE DATABASE IF NOT EXISTS auth_db;
 
-GRANT ALL PRIVILEGES ON auth_db.* TO 'authuser'@'%' IDENTIFIED BY 'authpassword';
+CREATE USER IF NOT EXISTS 'authuser'@'%' IDENTIFIED BY 'authpassword';
+
+GRANT ALL PRIVILEGES ON auth_db.* TO 'authuser'@'%';
 
 FLUSH PRIVILEGES;

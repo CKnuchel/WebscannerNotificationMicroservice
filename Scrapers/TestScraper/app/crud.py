@@ -1,5 +1,4 @@
-from mysqlalchemy.orm import Session
-
+from sqlalchemy.orm import Session
 from .models import Category, Product, ProductDetail
 from .schemas import CategoryCreate, ProductCreate, ProductDetailCreate
 
@@ -149,3 +148,15 @@ def get_product_detail_by_name(db: Session, name: str):
         - The product detail with the specified name
     """
     return db.query(ProductDetail).filter(ProductDetail.name == name).first()
+
+def get_product_detail(db: Session, skip: int = 0, limit: int = 100):
+    """
+    This function is used to retrieve a list of product details from the database.
+    - Parameters:
+        - db: The database session
+        - skip: The number of product details to skip
+        - limit: The maximum number of product details to return
+    - Returns:
+        - A list of product details
+    """
+    return db.query(ProductDetail).offset(skip).limit(limit).all()

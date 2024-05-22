@@ -1,23 +1,25 @@
 import requests
 from bs4 import BeautifulSoup
 from sqlalchemy.orm import Session
-from database import SessionLocal
-from crud import create_category, get_category_by_name, create_product, create_product_detail, get_product_by_name, get_product_detail_by_name
-from schemas import CategoryCreate, ProductCreate, ProductDetailCreate
-from models import Category, Product
-from rabbitmq import send_message
+from fastapi import APIRouter, Depends
+from typing import List
+from .database import get_db
+from .crud import create_category, get_category_by_name, create_product, create_product_detail, get_product_by_name, get_product_detail_by_name, get_categories, get_products, get_product_detail
+from .schemas import CategoryCreate, ProductCreate, ProductDetailCreate, Category, Product, ProductDetail
+from .rabbitmq import send_message
+
+router = APIRouter()
 
 BASE_URL = "https://webscraper.io/"
 TEST_SITE_URL = "/test-sites/e-commerce/static"
 
 def fetch_html(url: str):
-    """Fetch the HTML content of a given URL."""
     response = requests.get(url)
     response.raise_for_status()  # Raise an exception for HTTP errors
     return BeautifulSoup(response.text, "html.parser")
 
-def scrape_categories(db: Session):
-    """Scrape top-level categories and their subcategories."""
+@router.get("/scrape-categories")
+def scrape_categories(db: Session = Depends(get_db)):
     soup = fetch_html(BASE_URL + TEST_SITE_URL)
     navigation = soup.find("ul", id="side-menu")
     categories = navigation.find_all("li")
@@ -31,16 +33,13 @@ def scrape_categories(db: Session):
 
         complete_category_url = BASE_URL + category_url
 
-        # Check if the category already exists in the database
         if not get_category_by_name(db, category_name):
             create_category(db, CategoryCreate(name=category_name, url=complete_category_url, level="top"))
             send_message("categories", "top", {"name": category_name, "url": complete_category_url})
 
-        # Scrape the subcategories
         scrape_subcategories(db, complete_category_url)
 
 def scrape_subcategories(db: Session, category_url: str):
-    """Scrape subcategories for a given top-level category URL."""
     if category_url == BASE_URL + TEST_SITE_URL:
         return
 
@@ -52,13 +51,12 @@ def scrape_subcategories(db: Session, category_url: str):
         subcategory_url = subcategory.a["href"]
         complete_subcategory_url = BASE_URL + subcategory_url
 
-        # Check if the subcategory already exists in the database
         if not get_category_by_name(db, subcategory_name):
             create_category(db, CategoryCreate(name=subcategory_name, url=complete_subcategory_url, level="sub"))
             send_message("categories", "sub", {"name": subcategory_name, "url": complete_subcategory_url})
 
-def scrape_products(db: Session):
-    """Scrape products from all subcategories."""
+@router.get("/scrape-products")
+def scrape_products(db: Session = Depends(get_db)):
     categories = db.query(Category).filter(Category.level == "sub").all()
 
     for category in categories:
@@ -75,7 +73,6 @@ def scrape_products(db: Session):
             product_price = float(product.find("h4", class_="pull-right price").text.strip().replace("$", ""))
             product_description = product.find("p", class_="description").text.strip()
 
-            # Check if the product already exists in the database
             if not get_product_by_name(db, product_name):
                 create_product(db, ProductCreate(
                     name=product_name,
@@ -92,14 +89,13 @@ def scrape_products(db: Session):
                     "description": product_description
                 })
 
-        # Go to the next page if it exists
         next_page = soup.find("a", rel="next")
         if next_page and next_page.get("href"):
             next_page_url = BASE_URL + next_page["href"]
             scrape_products(db, next_page_url)
 
-def scrape_product_details(db: Session):
-    """Scrape product details for all products."""
+@router.get("/scrape-product-details")
+def scrape_product_details(db: Session = Depends(get_db)):
     products = db.query(Product).all()
 
     for product in products:
@@ -112,7 +108,6 @@ def scrape_product_details(db: Session):
         product_options = [option.text.strip() for option in card.find_all("div", class_="swatches").find_all("button")]
         product_reviews = card.find("p", class_="review-count").text.split(' ')[0]
 
-        # Create the product detail in the database, if it does not exist
         if not get_product_detail_by_name(db, product.name):
             create_product_detail(db, ProductDetailCreate(
                 product_id=product.id, 
@@ -131,23 +126,19 @@ def scrape_product_details(db: Session):
                 "reviews_count": int(product_reviews)
             })
 
-def run_scraper(scrape_option: str):
-    """Run the scraper based on the provided option."""
-    db = SessionLocal()
-    try:
-        if scrape_option == "categories":
-            scrape_categories(db)
-        elif scrape_option == "subcategories":
-            scrape_subcategories(db)
-        elif scrape_option == "products":
-            scrape_products(db)
-        elif scrape_option == "product_details":
-            scrape_product_details(db)
-        else:
-            print("Invalid option. Please choose from 'categories', 'subcategories', 'products', or 'product_details'.")
-    finally:
-        db.close()
+# Read endpoints
 
-if __name__ == "__main__":
-    # Example usage:
-    run_scraper("categories")  # Change the argument to "subcategories", "products", or "product_details" as needed
+@router.get("/categories/", response_model=List[Category])
+def read_categories(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    categories = get_categories(db, skip=skip, limit=limit)
+    return categories
+
+@router.get("/products/", response_model=List[Product])
+def read_products(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    products = get_products(db, skip=skip, limit=limit)
+    return products
+
+@router.get("/product-details/", response_model=List[ProductDetail])
+def read_product_details(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    product_details = get_product_detail(db, skip=skip, limit=limit)
+    return product_details

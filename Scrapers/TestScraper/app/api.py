@@ -4,10 +4,10 @@ from sqlalchemy.orm import Session
 import requests
 from typing import List
 
-from database import SessionLocal
-from crud import get_categories, get_products, get_product_details
-import schemas
-from scraper import run_scraper
+from .database import SessionLocal, get_db  # Updated import
+from .crud import *  # Ensure these functions exist in crud.py
+from . import schemas  # Updated import
+from .scraper import run_scraper  # Updated import
 
 oauth2scheme = OAuth2PasswordBearer(tokenUrl="token")
 AUTH_SERVICE_URL = "http://fastapi-auth:8000"
@@ -24,7 +24,7 @@ def verify_token_with_auth_service(token: str) -> dict:
     Verify the token with the auth service
     Returns the user data if the token is valid, otherwise raises an HTTPException
     """
-    response = requests.get(f"{AUTH_SERVICE_URL}/validate-token", headers={"Authorization": f"Bearer {token}"})
+    response = requests.get(f"{AUTH_SERVICE_URL}/auth/validate-token", headers={"Authorization": f"Bearer {token}"})
     if response.status_code == 200:
         return response.json()
     raise HTTPException(
@@ -66,5 +66,5 @@ def read_products(skip: int = 0, limit: int = 10, db: Session = Depends(get_db),
 # Endpoint to get product details
 @app.get("/product_details", response_model=List[schemas.ProductDetail])
 def read_product_details(skip: int = 0, limit: int = 10, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    product_details = get_product_details(db, skip=skip, limit=limit)
+    product_details = get_product_detail(db, skip=skip, limit=limit)
     return product_details

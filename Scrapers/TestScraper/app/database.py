@@ -1,5 +1,4 @@
 import os
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -13,17 +12,12 @@ MYSQL_DB = os.getenv("MYSQL_TEST_SCRAPER_DATABASE")
 
 # Database connection URL
 SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
+print(SQLALCHEMY_DATABASE_URL)
 
-# Create the database engine
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine) # This creates a Session to interact with the database
+Base = declarative_base() # This is the base class for all the models in the application
 
-# Create a session maker
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Create a base class for the database models
-Base = declarative_base()
-
-# Create a function to get a database session
 def get_db():
     db = SessionLocal()
     try:

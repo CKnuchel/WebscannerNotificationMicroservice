@@ -1,5 +1,7 @@
 CREATE DATABASE IF NOT EXISTS test_scraper_db;
 
-GRANT ALL PRIVILEGES ON auth_db.* TO 'testscraperuser'@'%' IDENTIFIED BY 'testscraperpassword';
+CREATE USER IF NOT EXISTS 'testscraperuser'@'%' IDENTIFIED BY 'testscraperpassword';
+
+GRANT ALL PRIVILEGES ON test_scraper_db.* TO 'testscraperuser'@'%';
 
 FLUSH PRIVILEGES;
