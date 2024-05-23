@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from urllib.parse import urljoin
 
 from .database import get_db
@@ -68,16 +68,47 @@ def scrape_subcategories(db: Session, category_url: str):
             send_message("categories", "sub", {"name": subcategory_name, "url": complete_subcategory_url})
 
 @router.get("/scrape-products")
-def scrape_products(db: Session = Depends(get_db)):
-    categories = get_categories(db)
+def scrape_products(db: Session = Depends(get_db), url: Optional[str] = None):
+    # Check if a specific URL is provided, otherwise start from category URLs
+    if url:
+        categories = [dummy_category(url)]  # TODO  Use the real category id !!!
+    else:
+        categories = db.query(Category).filter(Category.level == "sub").all()
+
     for category in categories:
         soup = fetch_html(category.url)
-        products = soup.find_all("div", class_="product")
-        for item in products:
-            product_name = item.find("h4", class_="product-name").text.strip()
-            product_url = urljoin(BASE_URL, item.find("a")['href'])
+
+        products = soup.find_all("div", class_="thumbnail")
+        for product in products:
+            product_name = product.find("a", class_="title").text.strip()
+            product_category_id = category.id
+            product_url = BASE_URL + product.find("a", class_="title")["href"]
+
             if not get_product_by_name(db, product_name):
-                create_product(db, Product(name=product_name, category_id=category.id, url=product_url))
+                create_product(db, Product(
+                    name=product_name,
+                    category_id=product_category_id,
+                    url=product_url
+                ))
+                send_message("products", "new", {
+                    "name": product_name,
+                    "category_id": product_category_id,
+                    "url": product_url
+                })
+
+        # Handle pagination
+        next_page = soup.find("a", rel="next")
+        if next_page and next_page.get("href"):
+            next_page_url = BASE_URL + next_page["href"]
+            scrape_products(db, next_page_url)  # Recursive call to handle the next page
+
+
+def dummy_category(url):
+    class DummyCategory:
+        def __init__(self, url):
+            self.url = url
+            self.id = 0 
+    return DummyCategory(url)
 
 @router.get("/scrape-product-details")
 def scrape_product_details(db: Session = Depends(get_db)):
