@@ -25,15 +25,14 @@
 - [x] Sicherstellen, dass RabbitMQ läuft und zugänglich ist
 
 ### 4. Scraping Services (Python (BS4))
-- [ ] Python Projekt für Scraper einrichten
-- [ ] Verbindung zur MySQL-Datenbank herstellen
-- [ ] Dockerfile erstellen
-- [ ] Scraper für die erste Webseite implementieren
-- [ ] Gescrapte Daten in der Datenbank speichern
-- [ ] Nachricht an RabbitMQ senden bei neuen Daten
-- [ ] Weitere Scraper für verschiedene Webseiten implementieren
-- [ ] Scraping Services containerisieren
-- [ ] Services in `docker-compose.yml` hinzufügen
+- [x] Python Projekt für Scraper einrichten
+- [x] Verbindung zur MySQL-Datenbank herstellen
+- [x] Dockerfile erstellen
+- [x] Scraper für die erste Webseite implementieren
+- [x] Gescrapte Daten in der Datenbank speichern
+- [x] Nachricht an RabbitMQ senden bei neuen Daten
+- [x] Scraping Services containerisieren
+- [x] Services in `docker-compose.yml` hinzufügen
 
 ### 5. API Gateway (FastAPI oder Spring Boot)
 - [ ] API Gateway Projekt einrichten
@@ -57,7 +56,7 @@
 
 ## Weiterentwicklung
 - [x] FastAPI (Auth) Konfiguration in .env
-- [ ] MySQL Port nicht gegen aussen Exposen
+- [x] MySQL Port nicht gegen aussen Exposen
 
 ## Projektstruktur
 
