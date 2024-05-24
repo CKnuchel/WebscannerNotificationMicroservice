@@ -100,14 +100,6 @@ def scrape_products(db: Session = Depends(get_db)):
             else:
                 category_url = None  # End the loop if no next page
 
-
-def dummy_category(url):
-    class DummyCategory:
-        def __init__(self, url):
-            self.url = url
-            self.id = 0 
-    return DummyCategory(url)
-
 @router.get("/scrape-product-details")
 def scrape_product_details(db: Session = Depends(get_db)):
     products = get_products(db)
