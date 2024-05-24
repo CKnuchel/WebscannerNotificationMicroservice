@@ -30,7 +30,6 @@ class ProductDetail(Base):
     thumbnail = Column(String(255))
     description = Column(String(255))
     price = Column(String(25))
-    options = Column(String(255))
     reviews_count = Column(String(25))
 
     product = relationship("Product", back_populates="details")

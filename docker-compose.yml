@@ -24,13 +24,6 @@ services:
     networks:
       - mysql-auth
 
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"] # Check if MySQL is up
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
   # FastAPI Authentication Service
   fastapi-auth:
     build: ./authentication-service
@@ -41,12 +34,7 @@ services:
       - "8000:8000" # FastAPI port
 
     depends_on:
-
-      mysql-auth:
-        condition: service_healthy # Wait for MySQL to be healthy
-
-      rabbitmq:
-        condition: service_healthy # Wait for RabbitMQ to be healthy
+      - mysql-auth
 
     env_file:
       - .env  # Load environment variables from .env file

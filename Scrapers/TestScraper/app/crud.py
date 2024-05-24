@@ -117,9 +117,8 @@ def create_product_detail(db: Session, product_detail: ProductDetailCreate):
     db_product_detail = ProductDetail(
         product_id=product_detail.product_id, 
         description=product_detail.description, 
-        image_url=product_detail.image_url, 
+        thumbnail=product_detail.thumbnail, 
         price=product_detail.price, 
-        options=product_detail.options, 
         reviews_count=product_detail.reviews_count)
     
     db.add(db_product_detail)

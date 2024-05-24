@@ -1,9 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
-from typing import List, Optional
 from urllib.parse import urljoin
+from typing import List
 
 from .database import get_db
 from .crud import get_categories, get_products, get_product_detail, create_category, create_product, create_product_detail, get_category_by_name, get_product_by_name, get_product_detail_by_product_id
@@ -55,8 +55,6 @@ def scrape_categories(db: Session = Depends(get_db)):
         scrape_subcategories(db, complete_category_url)
 
 def scrape_subcategories(db: Session, category_url: str):
-    if category_url == BASE_URL + TEST_SITE_URL:
-        return
     soup = fetch_html(category_url)
     subcategories = soup.find("ul", class_="nav nav-second-level").find_all("li")
     for subcategory in subcategories:
@@ -93,18 +91,39 @@ def scrape_products(db: Session = Depends(get_db)):
                         "url": product_url
                     })
 
-            # Handle pagination
-            next_page = soup.find("a", rel="next")
-            if next_page and next_page.get("href"):
-                category_url = urljoin(BASE_URL, next_page["href"])
+            # Correctly handle pagination
+            next_page_link = soup.select_one('a[rel="next"]')  # Using CSS selector to find the next page link
+            if next_page_link and next_page_link.get('href'):
+                category_url = urljoin(category_url, next_page_link['href'])
             else:
-                category_url = None  # End the loop if no next page
+                category_url = None  # No more pages to scrape
 
 @router.get("/scrape-product-details")
 def scrape_product_details(db: Session = Depends(get_db)):
-    products = get_products(db)
+    products = db.query(Product).all()
+
     for product in products:
         soup = fetch_html(product.url)
-        description = soup.find("p", class_="description").text.strip()
+
+        card = soup.find("div", class_="card")
+        product_thumbnail = card.find("img", class_="img-responsive")["src"]
+        product_description = card.find("p", class_="description").text.strip()
+        product_price = card.find("h4", class_="price").text.strip().removeprefix("$")
+        product_price = float(product_price)
+        product_reviews = card.find("p", class_="review-count").text.split(' ')[0]
+
         if not get_product_detail_by_product_id(db, product.id):
-            create_product_detail(db, ProductDetail(product_id=product.id, description=description))
+            create_product_detail(db, ProductDetail(
+                product_id=product.id, 
+                thumbnail=product_thumbnail, 
+                description=product_description, 
+                price=product_price, 
+                reviews_count=int(product_reviews)
+            ))
+            send_message("product_details", "new", {
+                "product_id": product.id, 
+                "thumbnail": product_thumbnail, 
+                "description": product_description, 
+                "price": product_price,
+                "reviews_count": int(product_reviews)
+            })

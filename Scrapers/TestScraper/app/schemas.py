@@ -89,16 +89,15 @@ class ProductDetailBase(BaseModel):
     - Fields:
         - product_id: The unique identifier of the product that the detail belongs to
         - description: The description of the product
-        - image_url: The URL of the product image
+        - thumbnail: The URL of the product image
         - price: The price of the product
         - options: The options available for the product
         - reviews_count: The number of reviews for the product
     """
     product_id : int
     description : str
-    image_url : str
+    thumbnail : str
     price : float
-    options : str
     reviews_count : int
 
 
