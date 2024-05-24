@@ -1,12 +1,16 @@
-import requests
-from bs4 import BeautifulSoup
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.orm import Session
+from bs4 import BeautifulSoup
+import requests
 from urllib.parse import urljoin
 from typing import List
 
 from .database import get_db
-from .crud import get_categories, get_products, get_product_detail, create_category, create_product, create_product_detail, get_category_by_name, get_product_by_name, get_product_detail_by_product_id
+from .crud import (
+    get_categories, get_products, get_product_detail,
+    create_category, create_product, create_product_detail,
+    get_category_by_name, get_product_by_name, get_product_detail_by_product_id
+)
 from .models import Category, Product, ProductDetail
 from .schemas import CategoryBase, ProductBase, ProductDetailBase
 from .rabbitmq import send_message
@@ -33,27 +37,6 @@ def read_products(db: Session = Depends(get_db)):
 def read_product_details(db: Session = Depends(get_db)):
     return get_product_detail(db)
 
-@router.get("/scrape-categories")
-def scrape_categories(db: Session = Depends(get_db)):
-    soup = fetch_html(BASE_URL + TEST_SITE_URL)
-    navigation = soup.find("ul", id="side-menu")
-    categories = navigation.find_all("li")
-
-    for category in categories:
-        category_name = category.a.text.strip()
-        category_url = category.a["href"]
-
-        if category_url == TEST_SITE_URL:
-            continue
-
-        complete_category_url = BASE_URL + category_url
-
-        if not get_category_by_name(db, category_name):
-            create_category(db, Category(name=category_name, url=complete_category_url, level="top"))
-            send_message("categories", "top", {"name": category_name, "url": complete_category_url})
-
-        scrape_subcategories(db, complete_category_url)
-
 def scrape_subcategories(db: Session, category_url: str):
     soup = fetch_html(category_url)
     subcategories = soup.find("ul", class_="nav nav-second-level").find_all("li")
@@ -65,10 +48,28 @@ def scrape_subcategories(db: Session, category_url: str):
             create_category(db, Category(name=subcategory_name, url=complete_subcategory_url, level="sub"))
             send_message("categories", "sub", {"name": subcategory_name, "url": complete_subcategory_url})
 
-@router.get("/scrape-products")
-def scrape_products(db: Session = Depends(get_db)):
-    categories = db.query(Category).filter(Category.level == "sub").all()
+def perform_scrape_categories(db: Session):
+    soup = fetch_html(BASE_URL + TEST_SITE_URL)
+    navigation = soup.find("ul", id="side-menu")
+    categories = navigation.find_all("li")
+    for category in categories:
+        category_name = category.a.text.strip()
+        category_url = category.a["href"]
+        if category_url == TEST_SITE_URL:
+            continue
+        complete_category_url = BASE_URL + category_url
+        if not get_category_by_name(db, category_name):
+            create_category(db, Category(name=category_name, url=complete_category_url, level="top"))
+            send_message("categories", "top", {"name": category_name, "url": complete_category_url})
+        scrape_subcategories(db, complete_category_url)  # Background task not needed here; it is already part of a background task
 
+@router.get("/scrape-categories")
+async def scrape_categories(background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    background_tasks.add_task(perform_scrape_categories, db)
+    return {"message": "Category scraping initiated"}
+
+def perform_scrape_products(db: Session):
+    categories = db.query(Category).filter(Category.level == "sub").all()
     for category in categories:
         category_url = category.url
         while category_url:
@@ -78,52 +79,35 @@ def scrape_products(db: Session = Depends(get_db)):
                 product_name = product.find("a", class_="title").text.strip()
                 product_category_id = category.id
                 product_url = urljoin(BASE_URL, product.find("a", class_="title")["href"])
-
                 if not get_product_by_name(db, product_name):
-                    create_product(db, Product(
-                        name=product_name,
-                        category_id=product_category_id,
-                        url=product_url
-                    ))
-                    send_message("products", "new", {
-                        "name": product_name,
-                        "category_id": product_category_id,
-                        "url": product_url
-                    })
-
-            # Correctly handle pagination
-            next_page_link = soup.select_one('a[rel="next"]')  # Using CSS selector to find the next page link
+                    create_product(db, Product(name=product_name, category_id=product_category_id, url=product_url))
+                    send_message("products", "new", {"name": product_name, "category_id": product_category_id, "url": product_url})
+            next_page_link = soup.select_one('a[rel="next"]')
             if next_page_link and next_page_link.get('href'):
                 category_url = urljoin(category_url, next_page_link['href'])
             else:
-                category_url = None  # No more pages to scrape
+                category_url = None
 
-@router.get("/scrape-product-details")
-def scrape_product_details(db: Session = Depends(get_db)):
+@router.get("/scrape-products")
+async def scrape_products(background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    background_tasks.add_task(perform_scrape_products, db)
+    return {"message": "Product scraping initiated"}
+
+def perform_scrape_product_details(db: Session):
     products = db.query(Product).all()
-
     for product in products:
         soup = fetch_html(product.url)
-
         card = soup.find("div", class_="card")
         product_thumbnail = card.find("img", class_="img-responsive")["src"]
         product_description = card.find("p", class_="description").text.strip()
         product_price = card.find("h4", class_="price").text.strip().removeprefix("$")
         product_price = float(product_price)
         product_reviews = card.find("p", class_="review-count").text.split(' ')[0]
-
         if not get_product_detail_by_product_id(db, product.id):
-            create_product_detail(db, ProductDetail(
-                product_id=product.id, 
-                thumbnail=product_thumbnail, 
-                description=product_description, 
-                price=product_price, 
-                reviews_count=int(product_reviews)
-            ))
-            send_message("product_details", "new", {
-                "product_id": product.id, 
-                "thumbnail": product_thumbnail, 
-                "description": product_description, 
-                "price": product_price,
-                "reviews_count": int(product_reviews)
-            })
+            create_product_detail(db, ProductDetail(product_id=product.id, thumbnail=product_thumbnail, description=product_description, price=product_price, reviews_count=int(product_reviews)))
+            send_message("product_details", "new", {"product_id": product.id, "thumbnail": product_thumbnail, "description": product_description, "price": product_price, "reviews_count": int(product_reviews)})
+
+@router.get("/scrape-product-details")
+async def scrape_product_details(background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    background_tasks.add_task(perform_scrape_product_details, db)
+    return {"message": "Product details scraping initiated"}
