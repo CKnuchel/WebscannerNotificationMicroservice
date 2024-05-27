@@ -114,7 +114,7 @@ def create_subscription(db: Session, subscription: SubscriptionCreate):
     - Returns:
         - The newly created subscription
     """
-    db_subscription = Subscription(email=subscription.email, product_id=subscription.product_id)
+    db_subscription = Subscription(username=subscription.username, product_id=subscription.product_id)
     db.add(db_subscription)
     db.commit()
     db.refresh(db_subscription)
@@ -175,6 +175,18 @@ def get_subscriptions_by_username(db: Session, username: str):
         - A list of subscriptions for the specified user
     """
     return db.query(Subscription).filter(Subscription.username == username).all()
+
+def get_subscriptions_by_username_and_category_id(db: Session, username: str, category_id: int):
+    """
+    This function is used to retrieve a list of subscriptions for a specific user and category from the database.
+    - Parameters:
+        - db: The database session
+        - username: The username of the user
+        - category_id: The unique identifier of the category
+    - Returns:
+        - A list of subscriptions for the specified user and category
+    """
+    return db.query(Subscription).filter(Subscription.username == username, Subscription.category_id == category_id).all()
 
 
 # CRUD operations for the User
@@ -243,3 +255,19 @@ def get_device_token_by_user_id(db: Session, user_id: int):
         - The device token with the specified unique identifier
     """
     return db.query(Device_Token).filter(Device_Token.user_id == user_id).first()
+
+def update_device_token_for_user_id(db: Session, user_id: int, device_token: str):
+    """
+    This function is used to update the device token for a specific user in the database.
+    - Parameters:
+        - db: The database session
+        - user_id: The unique identifier of the user
+        - device_token: The new device token
+    - Returns:
+        - The updated device token
+    """
+    db_device_token = db.query(Device_Token).filter(Device_Token.user_id == user_id).first()
+    db_device_token.token = device_token
+    db.commit()
+    db.refresh(db_device_token)
+    return db_device_token
